@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Supply Chain Race - Simple Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Supply Chain Flow */
+        .supply-chain-flow {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .flow-title {
+            text-align: center;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .chain-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chain-player {
+            flex: 1;
+            min-width: 140px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid #ddd;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .chain-player.active {
+            border-color: #fbbf24;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+            transform: scale(1.05);
+        }
+
+        .chain-player.completed {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .player-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .player-role {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .player-stats-mini {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin: 4px 0;
+        }
+
+        .stat-row .value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .cash-positive { color: #28a745 !important; }
+        .cash-negative { color: #dc3545 !important; }
+
+        .arrow {
+            font-size: 30px;
+            color: #667eea;
+            flex-shrink: 0;
+        }
+
+        /* Turn Indicator */
+        .turn-indicator {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .current-turn {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .turn-phase {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Dice Section */
+        .dice-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .dice-display {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 4px solid #333;
+            border-radius: 15px;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Action Buttons */
+        .action-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-roll { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-place-order { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .btn-fulfill { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .btn-next-turn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .btn-reset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        /* Order Input */
+        .order-input-group {
+            margin-bottom: 15px;
+        }
+
+        .order-input-group label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .order-input-group input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Event Card */
+        .event-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .event-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .event-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .event-effect {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Game Log */
+        .game-log {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .log-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .log-entry {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 13px;
+            border-left: 4px solid #667eea;
+        }
+
+        .log-entry.warning {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        /* Win Screen */
+        .win-screen {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .win-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .win-text {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .win-details {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .info-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-content {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-item-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .info-item-text {
+            font-size: 12px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Pending Orders Visual */
+        .pending-orders-visual {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .order-box {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .chain-container {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+
+            .chain-player {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏭 Supply Chain Race 📦</h1>
+            <p>4 Players • 1 Supply Chain • Race to Success!</p>
+        </div>
+
+        <!-- Win Screen (shown when game over) -->
+        <div id="winScreen" style="display: none;"></div>
+
+        <!-- Event Card (shown when active) -->
+        <div id="eventCard"></div>
+
+        <!-- Turn Indicator -->
+        <div class="turn-indicator">
+            <div class="current-turn" id="currentTurn">Player 1's Turn</div>
+            <div class="turn-phase" id="turnPhase">Roll Dice</div>
+        </div>
+
+        <!-- Supply Chain Flow -->
+        <div class="supply-chain-flow">
+            <div class="flow-title">🔗 Supply Chain Flow</div>
+            <div class="chain-container" id="chainContainer"></div>
+        </div>
+
+        <!-- Dice Section -->
+        <div class="dice-section" id="diceSection" style="display: none;">
+            <div style="color: #333; font-size: 16px; margin-bottom: 10px;">🎲 Roll Result</div>
+            <div class="dice-display" id="diceDisplay">?</div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <div class="action-title" id="actionTitle">Your Action</div>
+            <div id="actionButtons"></div>
+        </div>
+
+        <!-- Game Log -->
+        <div class="game-log">
+            <div class="log-title">📋 Game Activity</div>
+            <div id="gameLog"></div>
+        </div>
+
+        <!-- Game Info -->
+        <div class="info-box">
+            <div class="info-title">📊 How It Works</div>
+            <div class="info-content">
+                Each player represents a role in the supply chain. Take turns to order inventory, fulfill demand, and manage cash. 
+                First player to reach positive balance with no pending demand wins!
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-item-icon">💰</div>
+                    <div class="info-item-text">Order: $10/unit</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-icon">💵</div>
+                    <div class="info-item-text">Sale: $20/unit</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-icon">⏰</div>
+                    <div class="info-item-text">Delivery: 2 turns</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-icon">⚠️</div>
+                    <div class="info-item-text">Stockout: -10%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const ROLES = [
+            { name: 'Manufacturer', icon: '🏭', color: '#3b82f6' },
+            { name: 'Distributor', icon: '🚚', color: '#10b981' },
+            { name: 'Wholesaler', icon: '🏪', color: '#f59e0b' },
+            { name: 'Retailer', icon: '🛒', color: '#ef4444' }
+        ];
+
+        const EVENT_CARDS = [
+            { name: 'Black Friday', icon: '🛍️', effect: 'Demand +50%', demandMultiplier: 1.5 },
+            { name: 'Supply Shortage', icon: '📉', effect: 'Delay +1 turn', lagIncrease: 1 },
+            { name: 'Market Boom', icon: '📈', effect: 'Demand +40%', demandMultiplier: 1.4 },
+            { name: 'Economic Slowdown', icon: '🐌', effect: 'Demand -20%', demandMultiplier: 0.8 },
+            { name: 'Holiday Season', icon: '🎄', effect: 'Demand +30%', demandMultiplier: 1.3 },
+            { name: 'Normal Day', icon: '☀️', effect: 'No change', demandMultiplier: 1 }
+        ];
+
+        const LAG_TURNS = 2;
+        const STOCKOUT_PENALTY = 0.1;
+        const ROUNDS_TO_WIN = 8;
+
+        // Game State
+        let gameState = {
+            players: ROLES.map((role, index) => ({
+                id: index,
+                name: `Player ${index + 1}`,
+                role: role.name,
+                icon: role.icon,
+                color: role.color,
+                cash: 1000,
+                inventory: 20,
+                demand: 0,
+                pendingOrders: [],
+                turnsCompleted: 0,
+                inMarket: false
+            })),
+            currentPlayer: 0,
+            currentRound: 1,
+            diceValue: null,
+            orderAmount: 10,
+            eventCard: null,
+            turnPhase: 'roll', // roll, order, fulfill, next
+            gameLog: ['🎮 Game Started! Manufacturer goes first.'],
+            gameOver: false,
+            winner: null
+        };
+
+        // Helper Functions
+        function getCurrentPlayer() {
+            return gameState.players[gameState.currentPlayer];
+        }
+
+        function addLog(message, type = 'normal') {
+            const logEntry = { message, type };
+            gameState.gameLog.unshift(logEntry);
+            if (gameState.gameLog.length > 20) {
+                gameState.gameLog.pop();
+            }
+            renderGameLog();
+        }
+
+        // Game Actions
+        function rollDice() {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            gameState.diceValue = roll;
+            
+            const player = getCurrentPlayer();
+            addLog(`🎲 ${player.name} (${player.role}) rolled a ${roll}`);
+
+            // Generate demand based on dice
+            const baseDemand = roll + Math.floor(Math.random() * 5);
+            const modifier = gameState.eventCard?.demandMultiplier || 1;
+            player.demand = Math.floor(baseDemand * modifier);
+
+            addLog(`🛒 Customer demand: ${player.demand} units`, 'normal');
+
+            // Draw event card (15% chance)
+            if (Math.random() < 0.15) {
+                const card = EVENT_CARDS[Math.floor(Math.random() * EVENT_CARDS.length)];
+                gameState.eventCard = card;
+                addLog(`⚡ Event: ${card.name} - ${card.effect}`, 'warning');
+            }
+
+            gameState.turnPhase = 'order';
+            render();
+        }
+
+        function placeOrder() {
+            const player = getCurrentPlayer();
+            const amount = gameState.orderAmount;
+
+            if (amount <= 0) {
+                addLog(`❌ ${player.name} must order at least 1 unit`, 'warning');
+                return;
+            }
+
+            if (player.cash >= amount * 10) {
+                player.cash -= amount * 10;
+
+                const lagTurns = LAG_TURNS + (gameState.eventCard?.lagIncrease || 0);
+                player.pendingOrders.push({
+                    amount: amount,
+                    turnsRemaining: lagTurns,
+                    orderTurn: gameState.currentRound
+                });
+
+                addLog(`📦 ${player.name} ordered ${amount} units for $${amount * 10} (arrives in ${lagTurns} turns)`, 'success');
+                gameState.turnPhase = 'fulfill';
+            } else {
+                addLog(`⚠️ ${player.name} cannot afford ${amount} units (need $${amount * 10}, have $${player.cash})`, 'warning');
+                return;
+            }
+
+            render();
+        }
+
+        function skipOrder() {
+            const player = getCurrentPlayer();
+            addLog(`⏭️ ${player.name} skipped ordering`, 'normal');
+            gameState.turnPhase = 'fulfill';
+            render();
+        }
+
+        function fulfillDemand() {
+            const player = getCurrentPlayer();
+
+            if (player.demand > 0) {
+                if (player.inventory >= player.demand) {
+                    // Successfully fulfill
+                    player.inventory -= player.demand;
+                    const revenue = player.demand * 20;
+                    player.cash += revenue;
+                    addLog(`✅ ${player.name} fulfilled ${player.demand} units, earned $${revenue}`, 'success');
+                    player.demand = 0;
+                } else {
+                    // Stockout!
+                    const shortage = player.demand - player.inventory;
+                    const penalty = Math.floor(player.cash * STOCKOUT_PENALTY);
+                    player.cash -= penalty;
+
+                    // Pay penalty to next player in chain
+                    const nextPlayerIdx = (gameState.currentPlayer + 1) % gameState.players.length;
+                    gameState.players[nextPlayerIdx].cash += penalty;
+
+                    addLog(`🚨 STOCKOUT! ${player.name} short ${shortage} units. Lost $${penalty} to ${gameState.players[nextPlayerIdx].role}`, 'warning');
+                    
+                    if (player.inventory > 0) {
+                        const partialRevenue = player.inventory * 20;
+                        player.cash += partialRevenue;
+                        addLog(`💵 Partial fulfillment: ${player.inventory} units sold for $${partialRevenue}`, 'normal');
+                    }
+                    
+                    player.inventory = 0;
+                    player.demand = 0;
+                }
+            }
+
+            gameState.turnPhase = 'next';
+            render();
+        }
+
+        function nextTurn() {
+            const player = getCurrentPlayer();
+            player.turnsCompleted++;
+
+            // Process pending orders
+            player.pendingOrders = player.pendingOrders.map(order => ({
+                ...order,
+                turnsRemaining: order.turnsRemaining - 1
+            }));
+
+            // Deliver completed orders
+            const deliveredOrders = player.pendingOrders.filter(order => order.turnsRemaining <= 0);
+            const stillPending = player.pendingOrders.filter(order => order.turnsRemaining > 0);
+
+            deliveredOrders.forEach(order => {
+                player.inventory += order.amount;
+                addLog(`📬 ${player.name} received ${order.amount} units`, 'success');
+            });
+
+            player.pendingOrders = stillPending;
+
+            // Check win condition
+            if (player.turnsCompleted >= ROUNDS_TO_WIN) {
+                player.inMarket = true;
+                if (player.cash > 0 && player.demand === 0 && player.pendingOrders.length === 0) {
+                    gameState.gameOver = true;
+                    gameState.winner = player;
+                    addLog(`🏆 ${player.name} (${player.role}) WINS THE GAME!`, 'success');
+                    render();
+                    return;
+                }
+            }
+
+            // Move to next player
+            gameState.eventCard = null;
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            
+            if (gameState.currentPlayer === 0) {
+                gameState.currentRound++;
+                addLog(`🔄 Round ${gameState.currentRound} begins`, 'normal');
+            }
+
+            gameState.turnPhase = 'roll';
+            gameState.diceValue = null;
+            render();
+        }
+
+        function resetGame() {
+            gameState = {
+                players: ROLES.map((role, index) => ({
+                    id: index,
+                    name: `Player ${index + 1}`,
+                    role: role.name,
+                    icon: role.icon,
+                    color: role.color,
+                    cash: 1000,
+                    inventory: 20,
+                    demand: 0,
+                    pendingOrders: [],
+                    turnsCompleted: 0,
+                    inMarket: false
+                })),
+                currentPlayer: 0,
+                currentRound: 1,
+                diceValue: null,
+                orderAmount: 10,
+                eventCard: null,
+                turnPhase: 'roll',
+                gameLog: ['🎮 Game Started! Manufacturer goes first.'],
+                gameOver: false,
+                winner: null
+            };
+            render();
+        }
+
+        // Render Functions
+        function renderSupplyChain() {
+            const container = document.getElementById('chainContainer');
+            container.innerHTML = '';
+
+            gameState.players.forEach((player, index) => {
+                // Add player box
+                const isActive = index === gameState.currentPlayer && !gameState.gameOver;
+                const playerDiv = document.createElement('div');
+                playerDiv.className = `chain-player ${isActive ? 'active' : ''} ${player.inMarket ? 'completed' : ''}`;
+
+                const pendingOrdersHTML = player.pendingOrders.length > 0 ? `
+                    <div class="pending-orders-visual">
+                        ${player.pendingOrders.map(o => 
+                            `<div class="order-box">${o.amount} (${o.turnsRemaining}T)</div>`
+                        ).join('')}
+                    </div>
+                ` : '';
+
+                playerDiv.innerHTML = `
+                    <div class="player-icon">${player.icon}</div>
+                    <div class="player-role">${player.role}</div>
+                    <div class="player-stats-mini">
+                        <div class="stat-row">
+                            <span>💰 Cash:</span>
+                            <span class="value ${player.cash >= 0 ? 'cash-positive' : 'cash-negative'}">$${player.cash}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>📦 Stock:</span>
+                            <span class="value">${player.inventory}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>🛒 Demand:</span>
+                            <span class="value">${player.demand}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>🎯 Progress:</span>
+                            <span class="value">${player.turnsCompleted}/${ROUNDS_TO_WIN}</span>
+                        </div>
+                    </div>
+                    ${pendingOrdersHTML}
+                    ${player.inMarket ? '<div style="margin-top: 10px; color: #28a745; font-weight: bold;">🏁 IN MARKET</div>' : ''}
+                `;
+
+                container.appendChild(playerDiv);
+
+                // Add arrow between players (except after last player)
+                if (index < gameState.players.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '➡️';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function renderTurnIndicator() {
+            const player = getCurrentPlayer();
+            document.getElementById('currentTurn').textContent = 
+                `${player.name}'s Turn (${player.role}) - Round ${gameState.currentRound}`;
+            
+            const phaseText = {
+                'roll': '🎲 Roll Dice',
+                'order': '📦 Place Order',
+                'fulfill': '✅ Fulfill Demand',
+                'next': '⏭️ End Turn'
+            };
+            document.getElementById('turnPhase').textContent = phaseText[gameState.turnPhase] || '';
+        }
+
+        function renderEventCard() {
+            const container = document.getElementById('eventCard');
+            if (gameState.eventCard) {
+                container.innerHTML = `
+                    <div class="event-card">
+                        <div class="event-icon">${gameState.eventCard.icon}</div>
+                        <div class="event-title">${gameState.eventCard.name}</div>
+                        <div class="event-effect">${gameState.eventCard.effect}</div>
+                    </div>
+                `;
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function renderDiceSection() {
+            const section = document.getElementById('diceSection');
+            const display = document.getElementById('diceDisplay');
+            
+            if (gameState.diceValue) {
+                display.textContent = gameState.diceValue;
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function renderActionButtons() {
+            const title = document.getElementById('actionTitle');
+            const buttons = document.getElementById('actionButtons');
+            
+            if (gameState.gameOver) {
+                title.textContent = '🎉 Game Over!';
+                buttons.innerHTML = `
+                    <button class="btn-reset" onclick="resetGame()">🔄 Play Again</button>
+                `;
+                return;
+            }
+
+            const player = getCurrentPlayer();
+
+            if (gameState.turnPhase === 'roll') {
+                title.textContent = `${player.role}: Roll the Dice!`;
+                buttons.innerHTML = `
+                    <button class="btn-roll" onclick="rollDice()">
+                        🎲 Roll Dice
+                    </button>
+                `;
+            } else if (gameState.turnPhase === 'order') {
+                title.textContent = `${player.role}: Order Inventory`;
+                buttons.innerHTML = `
+                    <div class="order-input-group">
+                        <label>How many units to order? (Available: $${player.cash})</label>
+                        <input type="number" id="orderInput" min="0" max="${Math.floor(player.cash / 10)}" 
+                               value="${gameState.orderAmount}" 
+                               oninput="gameState.orderAmount = Math.max(0, parseInt(this.value) || 0)">
+                    </div>
+                    <button class="btn-place-order" onclick="placeOrder()">
+                        📦 Place Order ($${gameState.orderAmount * 10})
+                    </button>
+                    <button class="btn-next-turn" onclick="skipOrder()">
+                        ⏭️ Skip Order
+                    </button>
+                `;
+            } else if (gameState.turnPhase === 'fulfill') {
+                title.textContent = `${player.role}: Fulfill Customer Demand`;
+                buttons.innerHTML = `
+                    <button class="btn-fulfill" onclick="fulfillDemand()">
+                        ✅ Fulfill ${player.demand} units
+                        ${player.inventory < player.demand ? ' ⚠️ (Stockout!)' : ''}
+                    </button>
+                `;
+            } else if (gameState.turnPhase === 'next') {
+                title.textContent = `${player.role}: Turn Complete`;
+                buttons.innerHTML = `
+                    <button class="btn-next-turn" onclick="nextTurn()">
+                        ⏭️ Next Player
+                    </button>
+                `;
+            }
+        }
+
+        function renderGameLog() {
+            const container = document.getElementById('gameLog');
+            container.innerHTML = gameState.gameLog.slice(0, 10).map(entry => {
+                const typeClass = entry.type === 'warning' ? 'warning' : 
+                                 entry.type === 'success' ? 'success' : '';
+                return `<div class="log-entry ${typeClass}">${entry.message}</div>`;
+            }).join('');
+        }
+
+        function renderWinScreen() {
+            const container = document.getElementById('winScreen');
+            if (gameState.gameOver && gameState.winner) {
+                container.innerHTML = `
+                    <div class="win-screen">
+                        <div class="win-icon">🏆</div>
+                        <div class="win-text">${gameState.winner.name} Wins!</div>
+                        <div class="win-details">
+                            ${gameState.winner.role} ${gameState.winner.icon}<br>
+                            Final Cash: $${gameState.winner.cash}<br>
+                            Turns Completed: ${gameState.winner.turnsCompleted}
+                        </div>
+                    </div>
+                `;
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function render() {
+            renderSupplyChain();
+            renderTurnIndicator();
+            renderEventCard();
+            renderDiceSection();
+            renderActionButtons();
+            renderGameLog();
+            renderWinScreen();
+        }
+
+        // Initialize game
+        render();
+    </script>
+</body>
+</html>
